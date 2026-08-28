@@ -1,4 +1,3 @@
-function startDubbing() {
 const BACKEND_URL =
   "https://devotion-dubbing-studio-2.onrender.com";
 
@@ -58,8 +57,10 @@ async function startDubbing() {
   progressSection.style.display = "block";
   progressFill.style.width = "10%";
   progressText.textContent = "10%";
+
   statusMessage.textContent =
     "Uploading video to AI dubbing engine...";
+
   downloadButton.style.display = "none";
 
   try {
@@ -72,7 +73,6 @@ async function startDubbing() {
       LANGUAGE_CODES[sourceLanguage] || "auto"
     );
 
-    // First selected language starts immediately
     formData.append(
       "targetLanguage",
       LANGUAGE_CODES[selectedLanguages[0]]
@@ -102,7 +102,6 @@ async function startDubbing() {
     statusMessage.textContent =
       "AI is transcribing and preparing the dub...";
 
-    // Add remaining selected languages
     for (
       let i = 1;
       i < selectedLanguages.length;
@@ -127,14 +126,10 @@ async function startDubbing() {
     }
 
     statusMessage.textContent =
-      "Dubbing project started. Processing may take several minutes.";
+      "Real AI dubbing has started. Processing may take several minutes.";
 
     progressFill.style.width = "50%";
     progressText.textContent = "50%";
-
-    alert(
-      "Real AI dubbing has started! The video is now being processed."
-    );
 
   } catch (error) {
     console.error(error);
