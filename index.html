@@ -1,144 +1,724 @@
-const BACKEND_URL =
-  "https://devotion-dubbing-studio-2.onrender.com";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-const LANGUAGE_CODES = {
-  English: "en",
-  Kannada: "kn",
-  Tamil: "ta",
-  Hindi: "hi",
-  Telugu: "te",
-  Malayalam: "ml"
-};
+  <title>Devotion Dubbing Studio</title>
 
-let currentProjectId = null;
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-async function startDubbing() {
-  const sourceLanguage =
-    document.getElementById("sourceLanguage").value;
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f7fb;
+      color: #1f2937;
+    }
 
-  const selectedLanguages = [];
+    header {
+      background: linear-gradient(135deg, #312e81, #6d28d9);
+      color: white;
+      padding: 20px 6%;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      opacity: 0.9;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .hero h2 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      color: #64748b;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 22px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      margin-top: 0;
+    }
+
+    .upload-box {
+      border: 2px dashed #8b5cf6;
+      border-radius: 12px;
+      padding: 35px;
+      text-align: center;
+      background: #faf8ff;
+    }
+
+    input[type="file"] {
+      margin-top: 15px;
+    }
+
+    select {
+      width: 100%;
+      padding: 13px;
+      font-size: 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+    }
+
+    .language-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .language-option {
+      display: block;
+      padding: 13px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .language-option:hover {
+      border-color: #7c3aed;
+      background: #faf5ff;
+    }
+
+    .selected-languages {
+      margin-top: 15px;
+      color: #64748b;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 15px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary-btn {
+      width: 100%;
+      margin-top: 22px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .progress-section {
+      display: none;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 15px;
+      background: #e5e7eb;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #14b8a6);
+      transition: width 0.5s;
+    }
+
+    .status {
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+
+    .success {
+      color: #059669;
+      font-weight: bold;
+    }
+
+    .error {
+      color: #dc2626;
+      font-weight: bold;
+    }
+
+    video {
+      width: 100%;
+      max-height: 450px;
+      margin-top: 20px;
+      border-radius: 12px;
+      background: black;
+      display: none;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px;
+      color: #64748b;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎙️ Devotion Dubbing Studio</h1>
+  <p>AI-powered multilingual video dubbing</p>
+</header>
+
+<main>
+
+  <section class="hero">
+    <h2>Dub Your Video Into Another Language</h2>
+    <p>
+      Upload your video, select the original and target languages,
+      and let the AI dubbing engine process it.
+    </p>
+  </section>
+
+  <section class="card">
+    <h3>1. Upload Your Video</h3>
+
+    <div class="upload-box">
+      <p><strong>Choose a video file</strong></p>
+      <p>MP4, MOV or WebM</p>
+
+      <input
+        type="file"
+        id="videoInput"
+        accept="video/*"
+      >
+
+      <p id="fileName"></p>
+    </div>
+
+    <video id="videoPreview" controls></video>
+  </section>
+
+
+  <section class="card">
+    <h3>2. Select Original Language</h3>
+
+    <select id="sourceLanguage">
+      <option value="">-- Select original language --</option>
+      <option value="English">English</option>
+      <option value="Kannada">Kannada</option>
+      <option value="Tamil">Tamil</option>
+      <option value="Hindi">Hindi</option>
+      <option value="Telugu">Telugu</option>
+      <option value="Malayalam">Malayalam</option>
+    </select>
+  </section>
+
+
+  <section class="card">
+    <h3>3. Select Target Language</h3>
+
+    <div class="language-grid">
+
+      <label class="language-option">
+        <input type="checkbox" value="English">
+        English
+      </label>
+
+      <label class="language-option">
+        <input type="checkbox" value="Kannada">
+        Kannada
+      </label>
+
+      <label class="language-option">
+        <input type="checkbox" value="Tamil">
+        Tamil
+      </label>
+
+      <label class="language-option">
+        <input type="checkbox" value="Hindi">
+        Hindi
+      </label>
+
+      <label class="language-option">
+        <input type="checkbox" value="Telugu">
+        Telugu
+      </label>
+
+      <label class="language-option">
+        <input type="checkbox" value="Malayalam">
+        Malayalam
+      </label>
+
+    </div>
+
+    <div
+      id="selectedLanguages"
+      class="selected-languages"
+    >
+      No target language selected.
+    </div>
+
+    <button
+      id="startButton"
+      class="primary-btn"
+      onclick="startDubbing()"
+    >
+      🚀 Start Real AI Dubbing
+    </button>
+  </section>
+
+
+  <section
+    class="card progress-section"
+    id="progressSection"
+  >
+
+    <div class="progress-header">
+      <span>AI Dubbing Progress</span>
+      <span id="progressText">0%</span>
+    </div>
+
+    <div class="progress-bar">
+      <div
+        class="progress-fill"
+        id="progressFill"
+      ></div>
+    </div>
+
+    <div
+      class="status"
+      id="statusMessage"
+    >
+      Waiting to start...
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  Devotion Dubbing Studio
+</footer>
+
+
+<script>
+
+  // ==============================
+  // BACKEND CONFIGURATION
+  // ==============================
+
+  const BACKEND_URL =
+    "https://devotion-dubbing-studio-2.onrender.com";
+
+  const LANGUAGE_CODES = {
+    English: "en",
+    Kannada: "kn",
+    Tamil: "ta",
+    Hindi: "hi",
+    Telugu: "te",
+    Malayalam: "ml"
+  };
+
+
+  // ==============================
+  // APP STATE
+  // ==============================
+
+  let videoFile = null;
+  let currentProjectId = null;
+
+
+  // ==============================
+  // VIDEO UPLOAD
+  // ==============================
+
+  const videoInput =
+    document.getElementById("videoInput");
+
+  const videoPreview =
+    document.getElementById("videoPreview");
+
+  const fileName =
+    document.getElementById("fileName");
+
+
+  videoInput.addEventListener(
+    "change",
+    function (event) {
+
+      videoFile =
+        event.target.files[0];
+
+      if (!videoFile) {
+        return;
+      }
+
+      fileName.textContent =
+        "Selected: " +
+        videoFile.name;
+
+      const videoURL =
+        URL.createObjectURL(videoFile);
+
+      videoPreview.src =
+        videoURL;
+
+      videoPreview.style.display =
+        "block";
+    }
+  );
+
+
+  // ==============================
+  // LANGUAGE SELECTION DISPLAY
+  // ==============================
 
   document
-    .querySelectorAll('input[type="checkbox"]:checked')
-    .forEach(function (checkbox) {
-      selectedLanguages.push(checkbox.value);
-    });
+    .querySelectorAll(
+      'input[type="checkbox"]'
+    )
+    .forEach(
+      function (checkbox) {
 
-  if (!videoFile) {
-    alert("Please upload a video first.");
-    return;
-  }
+        checkbox.addEventListener(
+          "change",
+          updateSelectedLanguages
+        );
 
-  if (!sourceLanguage) {
-    alert("Please select the original video language.");
-    return;
-  }
-
-  if (selectedLanguages.length === 0) {
-    alert("Please select at least one target language.");
-    return;
-  }
-
-  const progressSection =
-    document.getElementById("progressSection");
-
-  const progressFill =
-    document.getElementById("progressFill");
-
-  const progressText =
-    document.getElementById("progressText");
-
-  const statusMessage =
-    document.getElementById("statusMessage");
-
-  const downloadButton =
-    document.getElementById("downloadButton");
-
-  progressSection.style.display = "block";
-  progressFill.style.width = "10%";
-  progressText.textContent = "10%";
-
-  statusMessage.textContent =
-    "Uploading video to AI dubbing engine...";
-
-  downloadButton.style.display = "none";
-
-  try {
-    const formData = new FormData();
-
-    formData.append("video", videoFile);
-
-    formData.append(
-      "sourceLanguage",
-      LANGUAGE_CODES[sourceLanguage] || "auto"
-    );
-
-    formData.append(
-      "targetLanguage",
-      LANGUAGE_CODES[selectedLanguages[0]]
-    );
-
-    const response = await fetch(
-      BACKEND_URL + "/api/dub",
-      {
-        method: "POST",
-        body: formData
       }
     );
 
-    const result = await response.json();
 
-    if (!response.ok) {
-      throw new Error(
-        result.error || "Unable to start dubbing."
+  function updateSelectedLanguages() {
+
+    const selected = [];
+
+    document
+      .querySelectorAll(
+        'input[type="checkbox"]:checked'
+      )
+      .forEach(
+        function (checkbox) {
+
+          selected.push(
+            checkbox.value
+          );
+
+        }
       );
+
+    const display =
+      document.getElementById(
+        "selectedLanguages"
+      );
+
+    if (selected.length === 0) {
+
+      display.textContent =
+        "No target language selected.";
+
+    } else {
+
+      display.textContent =
+        "Selected: " +
+        selected.join(", ");
+
     }
 
-    currentProjectId = result.projectId;
+  }
 
-    progressFill.style.width = "30%";
-    progressText.textContent = "30%";
+
+  // ==============================
+  // START REAL AI DUBBING
+  // ==============================
+
+  async function startDubbing() {
+
+    const sourceLanguage =
+      document.getElementById(
+        "sourceLanguage"
+      ).value;
+
+
+    const selectedLanguages = [];
+
+
+    document
+      .querySelectorAll(
+        'input[type="checkbox"]:checked'
+      )
+      .forEach(
+        function (checkbox) {
+
+          selectedLanguages.push(
+            checkbox.value
+          );
+
+        }
+      );
+
+
+    if (!videoFile) {
+
+      alert(
+        "Please upload a video first."
+      );
+
+      return;
+
+    }
+
+
+    if (!sourceLanguage) {
+
+      alert(
+        "Please select the original video language."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      selectedLanguages.length === 0
+    ) {
+
+      alert(
+        "Please select at least one target language."
+      );
+
+      return;
+
+    }
+
+
+    const progressSection =
+      document.getElementById(
+        "progressSection"
+      );
+
+
+    const progressFill =
+      document.getElementById(
+        "progressFill"
+      );
+
+
+    const progressText =
+      document.getElementById(
+        "progressText"
+      );
+
+
+    const statusMessage =
+      document.getElementById(
+        "statusMessage"
+      );
+
+
+    const startButton =
+      document.getElementById(
+        "startButton"
+      );
+
+
+    progressSection.style.display =
+      "block";
+
+    progressFill.style.width =
+      "10%";
+
+    progressText.textContent =
+      "10%";
 
     statusMessage.textContent =
-      "AI is transcribing and preparing the dub...";
+      "Uploading your video to the AI dubbing engine...";
 
-    for (
-      let i = 1;
-      i < selectedLanguages.length;
-      i++
-    ) {
-      await fetch(
-        BACKEND_URL +
+    startButton.disabled = true;
+
+    startButton.textContent =
+      "Processing...";
+
+
+    try {
+
+      const formData =
+        new FormData();
+
+
+      formData.append(
+        "video",
+        videoFile
+      );
+
+
+      formData.append(
+        "sourceLanguage",
+        LANGUAGE_CODES[sourceLanguage] || "auto"
+      );
+
+
+      formData.append(
+        "targetLanguage",
+        LANGUAGE_CODES[
+          selectedLanguages[0]
+        ]
+      );
+
+
+      const response =
+        await fetch(
+          BACKEND_URL + "/api/dub",
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+
+      const result =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          result.error ||
+          "Unable to start dubbing."
+        );
+
+      }
+
+
+      currentProjectId =
+        result.projectId;
+
+
+      progressFill.style.width =
+        "35%";
+
+      progressText.textContent =
+        "35%";
+
+
+      statusMessage.textContent =
+        "Video uploaded. ElevenLabs is transcribing and preparing the dub...";
+
+
+      // Add any additional selected languages
+      for (
+        let i = 1;
+        i < selectedLanguages.length;
+        i++
+      ) {
+
+        await fetch(
+          BACKEND_URL +
           "/api/dub/" +
           currentProjectId +
           "/language",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            targetLanguage:
-              LANGUAGE_CODES[selectedLanguages[i]]
-          })
-        }
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({
+              targetLanguage:
+                LANGUAGE_CODES[
+                  selectedLanguages[i]
+                ]
+            })
+          }
+        );
+
+      }
+
+
+      progressFill.style.width =
+        "50%";
+
+      progressText.textContent =
+        "50%";
+
+
+      statusMessage.textContent =
+        "Real AI dubbing has started. This may take several minutes. Please keep this page open.";
+
+
+      alert(
+        "Real AI dubbing has started successfully!"
       );
+
+
+    } catch (error) {
+
+      console.error(
+        "Dubbing error:",
+        error
+      );
+
+
+      progressFill.style.width =
+        "0%";
+
+      progressText.textContent =
+        "Error";
+
+
+      statusMessage.innerHTML =
+        '<span class="error">' +
+        "Dubbing failed: " +
+        error.message +
+        "</span>";
+
+
+      alert(
+        "Dubbing failed: " +
+        error.message
+      );
+
+
+      startButton.disabled =
+        false;
+
+      startButton.textContent =
+        "🚀 Start Real AI Dubbing";
+
     }
 
-    statusMessage.textContent =
-      "Real AI dubbing has started. Processing may take several minutes.";
-
-    progressFill.style.width = "50%";
-    progressText.textContent = "50%";
-
-  } catch (error) {
-    console.error(error);
-
-    statusMessage.textContent =
-      "Error: " + error.message;
-
-    alert(
-      "Dubbing failed: " + error.message
-    );
   }
-}
+
+</script>
+
+</body>
+</html>
